@@ -1,2 +1,2 @@
-Flask==2.2.3
-mailtm==1.0.2
+Flask
+mailtm
