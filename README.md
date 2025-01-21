@@ -172,9 +172,3 @@ Here is the updated structure of the project:
 ## Contributing
 
 Feel free to contribute to this project by creating issues, submitting pull requests, or suggesting improvements. All contributions are welcome!
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
