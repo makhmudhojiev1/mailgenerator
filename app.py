@@ -77,11 +77,14 @@ def email_listener():
     global received_emails
     while is_listening:
         try:
-            # Fetch new messages (this is a simplified approach; mailtm might handle this differently)
+            # Fetch new messages
             messages = email_client.get_messages()
             for message in messages:
+                # Extract sender's email address (assuming 'from' field exists in the message)
+                sender = message.get('from', {}).get('address', 'Unknown Sender')
                 email_content = {
                     "id": message.get('id', len(received_emails)),
+                    "sender": sender,  # Add sender information
                     "subject": message.get('subject', 'No Subject'),
                     "content": message.get('text', message.get('html', 'No Content')),
                     "is_html": 'html' in message,
