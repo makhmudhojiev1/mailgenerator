@@ -123,6 +123,12 @@
             transform: translateX(5px);
         }
 
+        .email-entry .sender {
+            color: #00ccff; /* Bright cyan for the sender */
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
         .email-entry strong {
             color: #00ff88;
             font-weight: 600;
@@ -148,19 +154,17 @@
             margin-bottom: 15px;
         }
 
-        /* Refresh Button */
-        .refresh-btn {
+        /* Refresh and Delete Buttons */
+        .refresh-btn, .delete-btn {
             background: #ff4444;
             box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
         }
 
-        .refresh-btn:hover {
+        .refresh-btn:hover, .delete-btn:hover {
             box-shadow: 0 6px 20px rgba(255, 68, 68, 0.5);
         }
 
-        /* Delete Button */
         .delete-btn {
-            background: #ff4444;
             padding: 8px 16px;
             font-size: 14px;
             margin-left: 10px;
@@ -209,7 +213,7 @@
         <button onclick="startListening()">Start Listening</button>
 
         <!-- Received Emails Section -->
-        <div class="section-title">Inbox <button class="refresh-btn" onclick="getEmails()">Refresh</button></div>
+        <div class="section-title">Inbox <button class="refresh-btn" onclick="getEmails()">Refresh</button> <button class="delete-btn" onclick="clearEmails()">Clear Inbox</button></div>
         <div class="section-description">View all received emails in real-time (auto-refreshes every 5 seconds).</div>
         <div id="email-box" class="email-box">
             <p>No emails received yet.</p>
@@ -293,19 +297,35 @@
                     const emailEntry = document.createElement('div');
                     emailEntry.className = 'email-entry';
                     emailEntry.innerHTML = `
+                        <div class="sender">From: ${email.sender}</div>
                         <strong>Subject:</strong> ${email.subject} <br> 
                         <strong>Content:</strong> ${email.content}
-                        <button class="delete-btn" onclick="deleteEmail(${index})">Delete</button>`;
+                        <button class="delete-btn" onclick="deleteEmail(${email.id})">Delete</button>`;
                     emailBox.appendChild(emailEntry);
                 });
             }
         }
 
-        async function deleteEmail(index) {
-            // In a real app, you'd make an API call to delete the email
-            // For this example, we'll just refresh the list
-            showNotification("Email deleted!");
-            await getEmails();
+        async function deleteEmail(emailId) {
+            const response = await fetch(`/delete_email/${emailId}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (response.ok) {
+                showNotification(data.message);
+                await getEmails(); // Refresh the inbox after deletion
+            } else {
+                showNotification(data.error, "error");
+            }
+        }
+
+        async function clearEmails() {
+            const response = await fetch('/clear_emails', { method: 'POST' });
+            const data = await response.json();
+            if (response.ok) {
+                showNotification(data.message);
+                await getEmails(); // Refresh the inbox after clearing
+            } else {
+                showNotification(data.error, "error");
+            }
         }
 
         function showNotification(message, type = "success") {
