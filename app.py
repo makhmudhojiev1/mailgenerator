@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify
 from mailtm import Email
 import random
 import string
-from datetime import datetime
 
 app = Flask(__name__)
 email_client = Email()  # Initialize the Email object
@@ -40,16 +39,20 @@ def register_email():
     except Exception as e:
         return jsonify({"error": f"Failed to register email: {str(e)}"}), 500
 
+@app.route('/copy_email', methods=['POST'])
+def copy_email():
+    if current_email:
+        return jsonify({"message": "Email copied to clipboard!", "email": current_email})
+    return jsonify({"error": "No email to copy!"}), 400
+
 @app.route('/start_listening', methods=['POST'])
 def start_listening():
     try:
         def listener(message):
             email_content = {
-                "id": len(received_emails) + 1,
-                "sender": message.get('from', 'Unknown Sender'),
                 "subject": message.get('subject', 'No Subject'),
                 "content": message.get('text', message.get('html', 'No Content')),
-                "timestamp": datetime.now().strftime("%b %d, %H:%M")
+                "is_html": 'html' in message
             }
             received_emails.append(email_content)
 
@@ -61,21 +64,9 @@ def start_listening():
 @app.route('/get_emails', methods=['GET'])
 def get_emails():
     if not received_emails:
-        return jsonify([])
+        return jsonify({"message": "No emails received yet."})
+    
     return jsonify(received_emails)
-
-@app.route('/download_email/<int:email_id>', methods=['GET'])
-def download_email(email_id):
-    email = next((e for e in received_emails if e['id'] == email_id), None)
-    if email:
-        return jsonify({"message": f"Downloaded email: {email['subject']}"})
-    return jsonify({"error": "Email not found"}), 404
-
-@app.route('/delete_email/<int:email_id>', methods=['DELETE'])
-def delete_email(email_id):
-    global received_emails
-    received_emails = [e for e in received_emails if e['id'] != email_id]
-    return jsonify({"message": f"Deleted email with ID: {email_id}"})
 
 if __name__ == '__main__':
     app.run(debug=True)
